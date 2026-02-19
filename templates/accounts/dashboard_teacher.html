@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard — Examination Portal{% endblock %}
+
+{% block content %}
+<h1>Teacher Dashboard</h1>
+{% if college %}
+    <p><strong>College:</strong> {{ college.name }} ({{ college.code }})</p>
+{% endif %}
+<p><a href="{% url 'exams:exam_list' %}">My exams</a> — create exams and upload question CSV.</p>
+{% endblock %}

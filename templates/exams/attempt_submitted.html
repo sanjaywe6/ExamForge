@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Exam submitted — Examination Portal{% endblock %}
+
+{% block content %}
+<h1>Exam submitted</h1>
+{% if attempt %}
+    <p>Thank you. Your exam has been submitted successfully.</p>
+    <p>You can close this window.</p>
+{% else %}
+    <p>Session expired. Your answers were already submitted.</p>
+{% endif %}
+<p><a href="{% url 'exams:exam_entry' %}">Enter another exam</a></p>
+{% endblock %}

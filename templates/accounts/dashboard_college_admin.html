@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}College Admin Dashboard — Examination Portal{% endblock %}
+
+{% block content %}
+<h1>College Admin Dashboard</h1>
+{% if college %}
+    <p><strong>College:</strong> {{ college.name }} ({{ college.code }})</p>
+    <p>From here you can:</p>
+    <ul>
+        <li>Manage Teachers — add teachers to your college (via Colleges app)</li>
+        <li>Manage Students — add students to your college (via Colleges app)</li>
+    </ul>
+{% else %}
+    <p>No college profile linked. Please contact support.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Register (College Admin) — Examination Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(-45deg, #f093fb, #f5576c, #4facfe, #00f2fe) !important;
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .register-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+    }
+
+    .register-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 3rem 2rem;
+        width: 100%;
+        max-width: 500px;
+        animation: slideUp 0.8s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .register-header h1 {
+        margin: 0;
+        color: #2d3748;
+        font-size: 2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: fadeIn 1s ease-out;
+    }
+
+    .register-header p {
+        color: #718096;
+        margin: 0.5rem 0 0;
+        font-size: 0.95rem;
+        animation: fadeIn 1.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .register-subtitle {
+        background: #edf2f7;
+        padding: 1rem;
+        border-radius: 10px;
+        color: #4a5568;
+        font-size: 0.9rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        animation: slideInLeft 0.6s ease-out 0.1s forwards;
+        opacity: 0;
+        line-height: 1.5;
+    }
+
+    .form-group {
+        margin-bottom: 1.2rem;
+        animation: slideInLeft 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .form-group:nth-child(1) { animation-delay: 0.2s; }
+    .form-group:nth-child(2) { animation-delay: 0.3s; }
+    .form-group:nth-child(3) { animation-delay: 0.4s; }
+    .form-group:nth-child(4) { animation-delay: 0.5s; }
+    .form-group:nth-child(5) { animation-delay: 0.6s; }
+    .form-group:nth-child(6) { animation-delay: 0.7s; }
+    .form-group:nth-child(7) { animation-delay: 0.8s; }
+    .form-group:nth-child(8) { animation-delay: 0.9s; }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        animation: slideInLeft 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    .form-row:nth-child(4) { animation-delay: 0.5s; }
+    .form-row:nth-child(5) { animation-delay: 0.6s; }
+
+    .form-row .form-group {
+        margin-bottom: 0;
+        animation: none;
+        opacity: 1;
+    }
+
+    .form-group label {
+        display: block;
+        color: #2d3748;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f7fafc;
+        font-family: inherit;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: #f5576c;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .form-group input::placeholder {
+        color: #a0aec0;
+    }
+
+    .help-text {
+        color: #718096;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+    }
+
+    .error-messages {
+        color: #e53e3e;
+        font-size: 0.85rem;
+        margin-top: 0.4rem;
+        animation: shake 0.4s ease-in-out;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    .non-field-errors {
+        background: #fed7d7;
+        color: #c53030;
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #c53030;
+        animation: shake 0.4s ease-in-out;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        animation: slideInLeft 0.6s ease-out 1s forwards;
+        opacity: 0;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(245, 87, 108, 0.3);
+    }
+
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        animation: slideInLeft 0.6s ease-out 1.1s forwards;
+        opacity: 0;
+    }
+
+    .login-link p {
+        margin: 0;
+        color: #718096;
+        font-size: 0.95rem;
+    }
+
+    .login-link a {
+        color: #f5576c;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+
+    .login-link a:hover {
+        color: #f093fb;
+        transform: translateX(3px);
+    }
+
+    .container { max-width: 100%; padding: 0; }
+    nav { display: none; }
+
+    @media (max-width: 600px) {
+        .register-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .register-header h1 {
+            font-size: 1.6rem;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <h1>📚 Register</h1>
+            <p>College Admin Account</p>
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="non-field-errors">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="register-subtitle">
+            <strong>Create a new college and admin account.</strong> Teachers and students are added by College Admin after login.
+        </div>
+
+        <form method="post" action="{% url 'accounts:register' %}" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_email">📧 Email Address</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="error-messages">{{ form.email.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_first_name">👤 First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="error-messages">{{ form.first_name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_last_name">👤 Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="error-messages">{{ form.last_name.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_password1">🔐 Password</label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <div class="error-messages">{{ form.password1.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password2">🔐 Confirm Password</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <div class="error-messages">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_college_name">🏫 College Name</label>
+                {{ form.college_name }}
+                {% if form.college_name.errors %}
+                    <div class="error-messages">{{ form.college_name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_college_code">🎓 College Code</label>
+                {{ form.college_code }}
+                {% if form.college_code.help_text %}
+                    <div class="help-text">{{ form.college_code.help_text|safe }}</div>
+                {% endif %}
+                {% if form.college_code.errors %}
+                    <div class="error-messages">{{ form.college_code.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="submit-btn">Create Account</button>
+        </form>
+
+        <div class="login-link">
+            <p>Already have an account?</p>
+            <a href="{% url 'accounts:login' %}">Login →</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

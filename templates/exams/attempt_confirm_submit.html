@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Submit exam — {{ exam.title }}{% endblock %}
+
+{% block content %}
+<h1>Submit exam</h1>
+<p>You are about to submit <strong>{{ exam.title }}</strong>. You will not be able to change your answers after submitting.</p>
+<form method="post" action="{% url 'exams:attempt_submit' attempt.id %}">
+    {% csrf_token %}
+    <p>
+        <button type="submit">Confirm submit</button>
+        <a href="{% url 'exams:attempt_question' attempt.id 1 %}">Back to exam</a>
+    </p>
+</form>
+{% endblock %}

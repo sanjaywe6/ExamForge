@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Attempts — {{ exam.title }}{% endblock %}
+
+{% block content %}
+<h1>Attempts: {{ exam.title }}</h1>
+<p><strong>Test code:</strong> {{ exam.test_code }} | <strong>Results published:</strong> {% if exam.result_published %}Yes{% else %}No{% endif %}</p>
+
+{% if not exam.result_published %}
+<p>
+    <form method="post" action="{% url 'exams:exam_publish_results' exam.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">Publish results</button>
+    </form>
+    — Students can see scores only after you publish.
+</p>
+{% endif %}
+
+<p><a href="{% url 'exams:exam_detail' exam.id %}">Back to exam</a></p>
+
+{% if attempts %}
+<table style="width:100%; border-collapse: collapse;">
+    <thead>
+        <tr style="background:#eee;">
+            <th style="padding:0.5rem; text-align:left;">Student</th>
+            <th style="padding:0.5rem;">Submitted at</th>
+            <th style="padding:0.5rem;">Score</th>
+            <th style="padding:0.5rem;">Max</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for a in attempts %}
+        <tr>
+            <td style="padding:0.5rem;">{{ a.student.user.get_full_name|default:a.student.user.email }} ({{ a.student.roll_number|default:"—" }})</td>
+            <td style="padding:0.5rem;">{% if a.submitted_at %}{{ a.submitted_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</td>
+            <td style="padding:0.5rem;">{% if a.total_score is not None %}{{ a.total_score }}{% else %}—{% endif %}</td>
+            <td style="padding:0.5rem;">{% if a.max_score is not None %}{{ a.max_score }}{% else %}—{% endif %}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No attempts yet.</p>
+{% endif %}
+{% endblock %}

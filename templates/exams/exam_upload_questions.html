@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Upload questions — {{ exam.title }}{% endblock %}
+
+{% block content %}
+<h1>Upload questions: {{ exam.title }}</h1>
+<p>Upload a CSV file with the required columns. Existing questions are kept; new rows will be added.</p>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <p>
+        <label for="id_csv_file">CSV file</label><br>
+        {{ form.csv_file }}
+        {{ form.csv_file.help_text }}
+        {{ form.csv_file.errors }}
+    </p>
+    <p>
+        <button type="submit">Upload and add questions</button>
+        <a href="{% url 'exams:exam_detail' exam.id %}">Back to exam</a>
+    </p>
+</form>
+
+<p><strong>Required columns:</strong> order, question_text, option_a, option_b, option_c, option_d, correct_answer, marks</p>
+<pre>order,question_text,option_a,option_b,option_c,option_d,correct_answer,marks
+1,What is 2+2?,3,4,5,6,B,1</pre>
+{% endblock %}

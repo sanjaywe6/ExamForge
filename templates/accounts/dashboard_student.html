@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard — Examination Portal{% endblock %}
+
+{% block content %}
+<h1>Student Dashboard</h1>
+{% if college %}
+    <p><strong>College:</strong> {{ college.name }} ({{ college.code }})</p>
+{% endif %}
+<p><a href="{% url 'exams:exam_entry' %}">Enter exam</a> — Use test code, registration number, and date of birth to start an exam.</p>
+<p><a href="{% url 'results:my_results_list' %}">My results</a> — View your scores (only for exams whose results are published).</p>
+{% endblock %}

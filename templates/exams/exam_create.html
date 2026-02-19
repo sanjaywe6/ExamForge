@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Create Exam — Examination Portal{% endblock %}
+
+{% block content %}
+<h1>Create Exam</h1>
+<p>Fill in exam details. You can optionally upload a CSV file to add questions now, or add questions later.</p>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <p>
+        <label for="id_title">Title</label><br>
+        {{ form.title }}
+        {{ form.title.errors }}
+    </p>
+    <p>
+        <label for="id_description">Description (optional)</label><br>
+        {{ form.description }}
+        {{ form.description.errors }}
+    </p>
+    <p>
+        <label for="id_start_time">Start time</label><br>
+        {{ form.start_time }}
+        {{ form.start_time.errors }}
+    </p>
+    <p>
+        <label for="id_end_time">End time</label><br>
+        {{ form.end_time }}
+        {{ form.end_time.errors }}
+    </p>
+    <p>
+        <label for="id_duration_minutes">Duration (minutes)</label><br>
+        {{ form.duration_minutes }}
+        {{ form.duration_minutes.errors }}
+    </p>
+    <p>
+        <label for="id_positive_marking">Positive marks per correct answer</label><br>
+        {{ form.positive_marking }}
+        {{ form.positive_marking.errors }}
+    </p>
+    <p>
+        <label for="id_negative_marking">Negative marks per wrong answer</label><br>
+        {{ form.negative_marking }}
+        {{ form.negative_marking.help_text }}
+        {{ form.negative_marking.errors }}
+    </p>
+
+    <hr>
+    <h2>Add questions from CSV (optional)</h2>
+    <p>Upload a CSV with columns: <code>order</code>, <code>question_text</code>, <code>option_a</code>, <code>option_b</code>, <code>option_c</code>, <code>option_d</code>, <code>correct_answer</code>, <code>marks</code>.</p>
+    <p>
+        <label for="id_csv_file">CSV file</label><br>
+        <input type="file" name="csv_file" id="id_csv_file" accept=".csv">
+    </p>
+
+    <p>
+        <button type="submit">Create exam</button>
+        <a href="{% url 'exams:exam_list' %}">Cancel</a>
+    </p>
+</form>
+
+<p><strong>CSV format example:</strong></p>
+<pre>order,question_text,option_a,option_b,option_c,option_d,correct_answer,marks
+1,What is 2+2?,3,4,5,6,B,1
+2,Capital of India?,Mumbai,Kolkata,Delhi,Chennai,C,1</pre>
+{% endblock %}

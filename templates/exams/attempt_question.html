@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Question {{ order }} — {{ exam.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .attempt-layout { display: flex; gap: 1rem; margin-top: 1rem; }
+    .attempt-main { flex: 1; }
+    .attempt-sidebar { width: 220px; flex-shrink: 0; background: #eee; padding: 1rem; border-radius: 4px; }
+    .attempt-sidebar h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .sidebar-section { margin-bottom: 1rem; }
+    .sidebar-section strong { display: block; margin-bottom: 0.25rem; font-size: 0.85rem; }
+    .q-palette { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .q-palette a, .q-palette span { display: inline-block; min-width: 2rem; padding: 0.25rem 0.4rem; text-align: center; border-radius: 4px; text-decoration: none; font-size: 0.9rem; }
+    .q-palette .attempted { background: #28a745; color: #fff; }
+    .q-palette .not-attempted { background: #fff; border: 1px solid #999; color: #333; }
+    .q-palette .review { background: #ffc107; color: #000; }
+    .q-palette .current { box-shadow: 0 0 0 2px #007bff; }
+    .timer { font-size: 1.25rem; font-weight: bold; padding: 0.5rem; }
+    .timer.warning { color: #856404; background: #fff3cd; }
+    .timer.danger { color: #721c24; background: #f8d7da; }
+    .question-block { margin: 1rem 0; padding: 1rem; background: #f9f9f9; border-radius: 4px; }
+    .options label { display: block; margin: 0.5rem 0; cursor: pointer; }
+    .submit-bar { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="timer" id="exam-timer">Time left: <span id="timer-display">--:--:--</span></div>
+
+<div class="attempt-layout">
+    <div class="attempt-main">
+        <h2>{{ exam.title }} — Question {{ order }} of {{ questions|length }}</h2>
+
+        <form method="post" id="question-form">
+            {% csrf_token %}
+            <input type="hidden" name="next_order" id="next_order" value="{{ order }}">
+
+            <div class="question-block">
+                <p><strong>Q{{ order }}.</strong> {{ question.question_text }}</p>
+                <div class="options">
+                    {% for key, text in question.options.items %}
+                    <label>
+                        <input type="radio" name="selected_option" value="{{ key }}" {% if selected_option == key %}checked{% endif %}> {{ key }}. {{ text }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <p>
+                <label>
+                    <input type="checkbox" name="marked_for_review" value="1" {% if marked_for_review %}checked{% endif %}> Mark for review
+                </label>
+            </p>
+
+            <div class="submit-bar">
+                {% if order > 1 %}
+                <button type="button" class="btn-prev">Previous</button>
+                {% endif %}
+                {% if order < questions|length %}
+                <button type="button" class="btn-next">Save & Next</button>
+                {% endif %}
+                <button type="button" class="btn-save">Save</button>
+                <a href="{{ submit_url }}" class="btn-submit-link">Submit exam</a>
+            </div>
+        </form>
+    </div>
+
+    <aside class="attempt-sidebar">
+        <h3>Question palette</h3>
+        <div class="sidebar-section">
+            <strong>Attempted</strong>
+            <div class="q-palette">
+                {% for s in sidebar %}
+                {% if s.attempted %}
+                <a href="{% url 'exams:attempt_question' attempt.id s.order %}" class="attempted {% if s.order == order %}current{% endif %}">{{ s.order }}</a>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <strong>Not attempted</strong>
+            <div class="q-palette">
+                {% for s in sidebar %}
+                {% if not s.attempted %}
+                <a href="{% url 'exams:attempt_question' attempt.id s.order %}" class="not-attempted {% if s.order == order %}current{% endif %}">{{ s.order }}</a>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <strong>Marked for review</strong>
+            <div class="q-palette">
+                {% for ord in sidebar_review_orders %}
+                <a href="{% url 'exams:attempt_question' attempt.id ord %}" class="review {% if ord == order %}current{% endif %}">{{ ord }}</a>
+                {% empty %}
+                <span style="color:#666">None</span>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+</div>
+
+<script>
+(function() {
+    var durationSeconds = {{ duration_seconds }};
+    var submitUrl = "{{ submit_url }}";
+    var form = document.getElementById("question-form");
+    var nextOrderInput = document.getElementById("next_order");
+    var timerDisplay = document.getElementById("timer-display");
+
+    function formatTime(sec) {
+        var h = Math.floor(sec / 3600);
+        var m = Math.floor((sec % 3600) / 60);
+        var s = sec % 60;
+        return [h, m, s].map(function(v) { return (v < 10 ? "0" : "") + v; }).join(":");
+    }
+
+    function updateTimer() {
+        if (durationSeconds <= 0) {
+            timerDisplay.textContent = "0:00:00";
+            document.querySelector(".timer").className = "timer danger";
+            autoSubmit();
+            return;
+        }
+        timerDisplay.textContent = formatTime(durationSeconds);
+        var el = document.querySelector(".timer");
+        el.classList.remove("warning", "danger");
+        if (durationSeconds <= 300) el.classList.add("danger");
+        else if (durationSeconds <= 600) el.classList.add("warning");
+        durationSeconds--;
+    }
+
+    function autoSubmit() {
+        clearInterval(timerInterval);
+        var f = document.createElement("form");
+        f.method = "post";
+        f.action = submitUrl;
+        var csrfEl = document.querySelector("input[name=csrfmiddlewaretoken]");
+        if (csrfEl) {
+            var csrf = document.createElement("input");
+            csrf.type = "hidden";
+            csrf.name = "csrfmiddlewaretoken";
+            csrf.value = csrfEl.value;
+            f.appendChild(csrf);
+        }
+        document.body.appendChild(f);
+        f.submit();
+    }
+
+    var timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    document.querySelector(".btn-next") && document.querySelector(".btn-next").addEventListener("click", function() {
+        nextOrderInput.value = "next";
+        form.submit();
+    });
+    document.querySelector(".btn-prev") && document.querySelector(".btn-prev").addEventListener("click", function() {
+        nextOrderInput.value = "prev";
+        form.submit();
+    });
+    document.querySelector(".btn-save") && document.querySelector(".btn-save").addEventListener("click", function() {
+        nextOrderInput.value = "{{ order }}";
+        form.submit();
+    });
+})();
+</script>
+{% endblock %}

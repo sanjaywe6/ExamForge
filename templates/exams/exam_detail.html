@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}{{ exam.title }} — Examination Portal{% endblock %}
+
+{% block content %}
+<h1>{{ exam.title }}</h1>
+<p><strong>Test code:</strong> {{ exam.test_code }}</p>
+<p><strong>Start:</strong> {{ exam.start_time|date:"M d, Y H:i" }} — <strong>End:</strong> {{ exam.end_time|date:"M d, Y H:i" }}</p>
+<p><strong>Duration:</strong> {{ exam.duration_minutes }} minutes</p>
+<p><strong>Positive marks:</strong> {{ exam.positive_marking }} | <strong>Negative marks:</strong> {{ exam.negative_marking }}</p>
+<p><strong>Questions:</strong> {{ question_count }}</p>
+
+{% if exam.description %}
+    <p>{{ exam.description }}</p>
+{% endif %}
+
+<p>
+    <a href="{% url 'exams:exam_upload_questions' exam.id %}">Upload CSV to add more questions</a>
+    |
+    <a href="{% url 'exams:exam_attempts_list' exam.id %}">View all attempts</a>
+    |
+    {% if not exam.result_published %}
+    <form method="post" action="{% url 'exams:exam_publish_results' exam.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">Publish results</button>
+    </form>
+    {% else %}
+    <strong>Results published</strong>
+    {% endif %}
+    |
+    <a href="{% url 'exams:exam_list' %}">Back to my exams</a>
+</p>
+{% endblock %}

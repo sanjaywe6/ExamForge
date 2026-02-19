@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}My Exams — Examination Portal{% endblock %}
+
+{% block content %}
+<h1>My Exams</h1>
+<p><a href="{% url 'exams:exam_create' %}">Create new exam</a></p>
+
+{% if exams %}
+    <ul>
+    {% for exam in exams %}
+        <li>
+            <a href="{% url 'exams:exam_detail' exam.id %}">{{ exam.title }}</a>
+            — Test code: <strong>{{ exam.test_code }}</strong>
+            ({{ exam.start_time|date:"M d, Y H:i" }} – {{ exam.end_time|date:"M d, Y H:i" }})
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>You have not created any exams yet. <a href="{% url 'exams:exam_create' %}">Create one</a>.</p>
+{% endif %}
+{% endblock %}

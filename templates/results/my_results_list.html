@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}My results — Examination Portal{% endblock %}
+
+{% block content %}
+<h1>My results</h1>
+<p>You can see your score only for exams whose results have been published by the teacher.</p>
+
+{% if attempts %}
+<ul>
+{% for a in attempts %}
+    <li>
+        <strong>{{ a.exam.title }}</strong> ({{ a.exam.test_code }})
+        — Submitted: {{ a.submitted_at|date:"M d, Y H:i" }}
+        {% if a.exam.result_published and a.total_score is not None %}
+            — Score: <strong>{{ a.total_score }}</strong> / {{ a.max_score }}
+            <a href="{% url 'results:my_result_detail' a.id %}">View</a>
+        {% else %}
+            — <em>Results not published yet</em>
+        {% endif %}
+    </li>
+{% endfor %}
+</ul>
+{% else %}
+<p>You have not attempted any exam yet. <a href="{% url 'exams:exam_entry' %}">Enter exam</a> to take one.</p>
+{% endif %}
+{% endblock %}
