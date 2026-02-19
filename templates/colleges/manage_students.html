@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students — {{ college.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+	<h1 class="h2 mb-0">Student Management</h1>
+	<a href="{% url 'colleges:import_students' %}" class="btn btn-primary">
+		<i class="bi bi-plus-circle me-1"></i> Import Students
+	</a>
+</div>
+
+{% if batches %}
+<div class="row g-3">
+	{% for batch in batches %}
+	<div class="col-12">
+		<div class="card shadow-sm">
+			<div class="card-header bg-light">
+				<div class="d-flex justify-content-between align-items-center">
+					<div>
+						<h5 class="card-title mb-1">
+							<i class="bi bi-folder me-2"></i>{{ batch.title }}
+						</h5>
+						{% if batch.description %}<p class="text-muted small mb-0">{{ batch.description }}</p>{% endif %}
+					</div>
+					<span class="badge bg-info">{{ batch.students.count }} students</span>
+				</div>
+			</div>
+			<div class="card-body p-0">
+				{% if batch.students.all %}
+				<div class="table-responsive">
+					<table class="table table-hover align-middle mb-0">
+						<thead class="table-light">
+							<tr>
+								<th style="width: 30%;">Name</th>
+								<th style="width: 20%;">Email</th>
+								<th style="width: 15%;">Student ID</th>
+								<th style="width: 20%;">Course</th>
+								<th style="width: 15%;">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for student in batch.students.all %}
+							<tr>
+								<td>{{ student.user.get_full_name|default:student.user.email }}</td>
+								<td><small class="text-muted">{{ student.user.email }}</small></td>
+								<td><span class="badge bg-info">{{ student.student_id }}</span></td>
+								<td><small>{{ student.course|default:"—" }}</small></td>
+								<td>
+									<div class="btn-group btn-group-sm" role="group">
+										<a href="{% url 'colleges:edit_student' student.id %}" class="btn btn-outline-primary" title="Edit">
+											<i class="bi bi-pencil"></i>
+										</a>
+										<form method="post" style="display:inline;" onsubmit="return confirm('Delete this student?');">
+											{% csrf_token %}
+											<input type="hidden" name="action" value="delete">
+											<input type="hidden" name="student_id" value="{{ student.id }}">
+											<button type="submit" class="btn btn-outline-danger" title="Delete">
+												<i class="bi bi-trash"></i>
+											</button>
+										</form>
+									</div>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+				{% else %}
+				<p class="text-muted p-3 mb-0">No students in this batch.</p>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+	{% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info" role="alert">
+	<i class="bi bi-info-circle me-2"></i>
+	No student batches yet. <a href="{% url 'colleges:import_students' %}" class="alert-link">Import students</a> to get started.
+</div>
+{% endif %}
+{% endblock %}

@@ -3,13 +3,19 @@
 {% block title %}Submit exam — {{ exam.title }}{% endblock %}
 
 {% block content %}
-<h1>Submit exam</h1>
-<p>You are about to submit <strong>{{ exam.title }}</strong>. You will not be able to change your answers after submitting.</p>
-<form method="post" action="{% url 'exams:attempt_submit' attempt.id %}">
-    {% csrf_token %}
-    <p>
-        <button type="submit">Confirm submit</button>
-        <a href="{% url 'exams:attempt_question' attempt.id 1 %}">Back to exam</a>
-    </p>
-</form>
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm border-warning">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-3">Submit exam</h1>
+                <p class="mb-4">You are about to submit <strong>{{ exam.title }}</strong>. You will not be able to change your answers after submitting.</p>
+                <form method="post" action="{% url 'exams:attempt_submit' attempt.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning me-2">Confirm submit</button>
+                    <a href="{% url 'exams:attempt_question' attempt.id 1 %}" class="btn btn-outline-secondary">Back to exam</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

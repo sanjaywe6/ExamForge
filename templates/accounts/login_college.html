@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}College Admin Login — Examination Portal{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="login-bg">
+<div class="login-card card p-4">
+    <div class="login-title-overlay">
+        <h2>College Admin Login</h2>
+        <p class="text-muted">Sign in with your admin email and password</p>
+    </div>
+
+    <div class="login-nav-buttons">
+        <a class="btn btn-outline-secondary" href="{% url 'accounts:login_student' %}">Student Login</a>
+        <a class="btn btn-outline-secondary" href="{% url 'accounts:login_teacher' %}">Teacher Login</a>
+    </div>
+
+    <div>
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <form method="post" action="" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="id_email" class="form-label">Email</label>
+                <input type="email" name="email" id="id_email" class="form-control" value="{{ form.email.value|default:'' }}" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label for="id_password" class="form-label">Password</label>
+                <input type="password" name="password" id="id_password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Login as College Admin</button>
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}

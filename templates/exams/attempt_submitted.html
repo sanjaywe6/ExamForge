@@ -3,12 +3,20 @@
 {% block title %}Exam submitted — Examination Portal{% endblock %}
 
 {% block content %}
-<h1>Exam submitted</h1>
-{% if attempt %}
-    <p>Thank you. Your exam has been submitted successfully.</p>
-    <p>You can close this window.</p>
-{% else %}
-    <p>Session expired. Your answers were already submitted.</p>
-{% endif %}
-<p><a href="{% url 'exams:exam_entry' %}">Enter another exam</a></p>
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card shadow-sm border-success">
+            <div class="card-body p-4 text-center">
+                <h1 class="h4 mb-3">Exam submitted</h1>
+                {% if attempt %}
+                    <div class="alert alert-success" role="alert">Thank you. Your exam has been submitted successfully.</div>
+                    <p class="text-muted">You can close this window.</p>
+                {% else %}
+                    <p class="text-muted">Session expired. Your answers were already submitted.</p>
+                {% endif %}
+                <a href="{% url 'exams:exam_entry' %}" class="btn btn-primary">Enter another exam</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

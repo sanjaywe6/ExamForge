@@ -20,6 +20,7 @@ from .forms import (
     ExamEntryForm,
     validate_questions_csv,
 )
+from colleges.models import Student, College
 
 
 def get_teacher_or_redirect(request):
@@ -56,6 +57,7 @@ def exam_create_view(request):
                 with transaction.atomic():
                     exam = form.save(commit=False)
                     exam.created_by = teacher
+                    # Leave time fields empty (non-time-based)
                     exam.save()
                     for row in csv_rows:
                         Question.objects.create(
@@ -139,6 +141,23 @@ def exam_list_view(request):
 
 
 @login_required(login_url="accounts:login")
+@require_http_methods(["POST"])
+@csrf_protect
+def exam_toggle_publish_view(request, exam_id):
+    teacher = get_teacher_or_redirect(request)
+    if teacher is None:
+        return redirect("accounts:dashboard")
+    exam = get_object_or_404(Exam, pk=exam_id)
+    if exam.created_by_id != teacher.pk:
+        messages.error(request, "Access denied.")
+        return redirect("exams:exam_list")
+    exam.published = not bool(exam.published)
+    exam.save(update_fields=["published"])
+    messages.success(request, f"Exam '{exam.title}' is now {'published' if exam.published else 'unpublished'}.")
+    return redirect("exams:exam_list")
+
+
+@login_required(login_url="accounts:login")
 def exam_detail_view(request, exam_id):
     """Show exam details and question count; link to upload CSV."""
     teacher = get_teacher_or_redirect(request)
@@ -191,55 +210,79 @@ SESSION_ATTEMPT_KEY = "exam_attempt_id"
 
 def exam_entry_view(request):
     """Student enters with test code, registration number, DOB. Validate time window, no re-attempt; create attempt."""
-    from results.models import StudentAttempt
-
+    # New flow: authenticate student (college_code + registration_number + dob), then show student dashboard
     if request.method == "POST":
         form = ExamEntryForm(data=request.POST)
         if form.is_valid():
-            test_code = form.cleaned_data["test_code"].strip().upper()
             roll_number = form.cleaned_data["registration_number"].strip()
             dob = form.cleaned_data["date_of_birth"]
-
-            exam = Exam.objects.filter(test_code__iexact=test_code).select_related("created_by__college").first()
-            if not exam:
-                messages.error(request, "Invalid test code.")
+            college_code = form.cleaned_data["college_code"].strip().upper()
+            college = College.objects.filter(code__iexact=college_code).first()
+            # fallback: try exam's college if test_code provided (not used currently)
+            if not college:
+                messages.error(request, "College code not found.")
                 return render(request, "exams/exam_entry.html", {"form": form})
 
-            now = timezone.now()
-            if now < exam.start_time:
-                messages.error(request, "Exam has not started yet.")
-                return render(request, "exams/exam_entry.html", {"form": form})
-            if now > exam.end_time:
-                messages.error(request, "Exam has ended.")
-                return render(request, "exams/exam_entry.html", {"form": form})
-
-            college = exam.created_by.college
-            student = college.students.filter(roll_number__iexact=roll_number).first()
+            student = college.students.filter(student_id__iexact=roll_number).first()
             if not student:
-                messages.error(request, "Invalid registration number for this exam.")
+                messages.error(request, "Invalid student ID for this college.")
                 return render(request, "exams/exam_entry.html", {"form": form})
 
             if student.date_of_birth != dob:
                 messages.error(request, "Date of birth does not match.")
                 return render(request, "exams/exam_entry.html", {"form": form})
 
-            if StudentAttempt.objects.filter(student=student, exam=exam).exists():
-                messages.error(request, "You have already attempted this exam.")
-                return render(request, "exams/exam_entry.html", {"form": form})
-
-            if exam.questions.count() == 0:
-                messages.error(request, "This exam has no questions.")
-                return render(request, "exams/exam_entry.html", {"form": form})
-
-            attempt = StudentAttempt.objects.create(student=student, exam=exam)
-            request.session[SESSION_ATTEMPT_KEY] = attempt.pk
-            messages.success(request, "You can now start the exam.")
-            return redirect("exams:attempt_question", attempt_id=attempt.pk, order=1)
+            # Store student id in session and redirect to student exams dashboard
+            request.session["exam_student_id"] = student.pk
+            messages.success(request, f"Welcome, {student.user.get_full_name() or student.user.email}.")
+            return redirect("exams:student_exams")
         messages.error(request, "Please correct the errors below.")
     else:
         form = ExamEntryForm()
 
     return render(request, "exams/exam_entry.html", {"form": form})
+
+
+def _get_session_student(request):
+    sid = request.session.get("exam_student_id")
+    if not sid:
+        return None
+    return Student.objects.select_related("college", "user").filter(pk=sid).first()
+
+
+def student_exams_view(request):
+    """Show published exams for the student's college and previous attempts/results."""
+    student = _get_session_student(request)
+    if not student:
+        messages.info(request, "Please enter exam credentials to continue.")
+        return redirect("exams:exam_entry")
+
+    exams = Exam.objects.filter(created_by__college=student.college, published=True).order_by("-created_at")
+    attempts = StudentAttempt.objects.filter(student=student).select_related("exam").order_by("-started_at")
+    return render(request, "exams/student_exams.html", {"student": student, "exams": exams, "attempts": attempts})
+
+
+def exam_info_view(request, exam_id):
+    """Show exam instructions and require agree before creating attempt."""
+    student = _get_session_student(request)
+    if not student:
+        messages.info(request, "Please enter exam credentials to continue.")
+        return redirect("exams:exam_entry")
+
+    exam = get_object_or_404(Exam, pk=exam_id)
+    if not exam.published or exam.created_by.college_id != student.college_id:
+        messages.error(request, "Exam not available.")
+        return redirect("exams:student_exams")
+
+    if request.method == "POST":
+        # create or get existing attempt
+        attempt, created = StudentAttempt.objects.get_or_create(student=student, exam=exam)
+        request.session[SESSION_ATTEMPT_KEY] = attempt.pk
+        if attempt.submitted_at:
+            return redirect("exams:attempt_submitted", attempt_id=attempt.pk)
+        return redirect("exams:attempt_question", attempt_id=attempt.pk, order=1)
+
+    return render(request, "exams/exam_info.html", {"exam": exam, "student": student})
 
 
 def get_attempt_for_request(request, attempt_id):

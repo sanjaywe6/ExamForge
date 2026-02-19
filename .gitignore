@@ -147,3 +147,5 @@ yarn-error.log
 # === Local configuration ===
 *.cfg
 *.conf
+
+sampleData/

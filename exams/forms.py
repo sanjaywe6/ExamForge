@@ -119,38 +119,13 @@ class ExamCreationForm(forms.ModelForm):
         fields = [
             "title",
             "description",
-            "start_time",
-            "end_time",
-            "duration_minutes",
             "positive_marking",
             "negative_marking",
         ]
         widgets = {
             "title": forms.TextInput(attrs={"placeholder": "Exam title"}),
             "description": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional description"}),
-            "start_time": forms.DateTimeInput(
-                attrs={"type": "datetime-local"},
-                format="%Y-%m-%dT%H:%M",
-            ),
-            "end_time": forms.DateTimeInput(
-                attrs={"type": "datetime-local"},
-                format="%Y-%m-%dT%H:%M",
-            ),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["start_time"].input_formats = ["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
-        self.fields["end_time"].input_formats = ["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M", "%Y-%m-%d %H:%M:%S"]
-
-    def clean(self):
-        cleaned = super().clean()
-        start = cleaned.get("start_time")
-        end = cleaned.get("end_time")
-        if start and end and end <= start:
-            raise ValidationError("End time must be after start time.")
-        return cleaned
-
     def clean_negative_marking(self):
         val = self.cleaned_data.get("negative_marking")
         if val is not None and val > 0:
@@ -198,4 +173,9 @@ class ExamEntryForm(forms.Form):
     date_of_birth = forms.DateField(
         label="Date of birth",
         widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    college_code = forms.CharField(
+        max_length=50,
+        label="College code",
+        widget=forms.TextInput(attrs={"placeholder": "College code (e.g. ABC)"}),
     )

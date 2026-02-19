@@ -1,27 +1,37 @@
 {% extends "base.html" %}
 
-{% block title %}My results — Examination Portal{% endblock %}
+{% block title %}My Results — Examination Portal{% endblock %}
 
 {% block content %}
-<h1>My results</h1>
-<p>You can see your score only for exams whose results have been published by the teacher.</p>
+<h1 class="mb-4">My Results</h1>
+<p class="text-muted mb-4">You can see your score only for exams whose results have been published by the teacher.</p>
 
 {% if attempts %}
-<ul>
-{% for a in attempts %}
-    <li>
-        <strong>{{ a.exam.title }}</strong> ({{ a.exam.test_code }})
-        — Submitted: {{ a.submitted_at|date:"M d, Y H:i" }}
-        {% if a.exam.result_published and a.total_score is not None %}
-            — Score: <strong>{{ a.total_score }}</strong> / {{ a.max_score }}
-            <a href="{% url 'results:my_result_detail' a.id %}">View</a>
-        {% else %}
-            — <em>Results not published yet</em>
-        {% endif %}
-    </li>
-{% endfor %}
-</ul>
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for a in attempts %}
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <strong>{{ a.exam.title }}</strong> <span class="text-muted">({{ a.exam.test_code }})</span><br>
+                    <small class="text-muted">Submitted: {{ a.submitted_at|date:"M d, Y H:i" }}</small>
+                </div>
+                <div>
+                    {% if a.exam.result_published and a.total_score is not None %}
+                        <span class="badge bg-success me-2">{{ a.total_score }} / {{ a.max_score }}</span>
+                        <a href="{% url 'results:my_result_detail' a.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                    {% else %}
+                        <span class="text-muted">Results not published yet</span>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 {% else %}
-<p>You have not attempted any exam yet. <a href="{% url 'exams:exam_entry' %}">Enter exam</a> to take one.</p>
+<div class="alert alert-info" role="alert">
+    You have not attempted any exam yet. <a href="{% url 'exams:exam_entry' %}" class="alert-link">Enter exam</a> to take one.
+</div>
 {% endif %}
 {% endblock %}

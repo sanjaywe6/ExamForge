@@ -19,6 +19,25 @@ class College(models.Model):
         return self.name
 
 
+class StudentBatch(models.Model):
+    """Groups students imported in a single batch with title and description."""
+    college = models.ForeignKey(
+        College,
+        on_delete=models.CASCADE,
+        related_name="student_batches",
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["college"])]
+
+    def __str__(self):
+        return f"{self.title} ({self.college.name})"
+
+
 class Teacher(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -60,15 +79,23 @@ class Student(models.Model):
         on_delete=models.CASCADE,
         related_name="students",
     )
-    roll_number = models.CharField(max_length=50, null=True, blank=True, db_index=True)
+    batch = models.ForeignKey(
+        StudentBatch,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="students",
+    )
+    student_id = models.CharField(max_length=50, null=True, blank=True, db_index=True, unique=True)
+    course = models.CharField(max_length=255, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True, help_text="Used for exam entry verification")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["college", "roll_number"],
-                condition=models.Q(roll_number__isnull=False) & ~models.Q(roll_number=""),
+                fields=["college", "student_id"],
+                condition=models.Q(student_id__isnull=False) & ~models.Q(student_id=""),
                 name="unique_student_roll_per_college",
             ),
         ]

@@ -1,0 +1,38 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}Dashboard — Examination Portal{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Overview</h1>
+  <div class="text-muted">Welcome back, {{ user.get_full_name|default:user.email }}</div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card shadow-sm rounded">
+      <div class="card-body">
+        <h6 class="card-title">Active Exams</h6>
+        <p class="display-6 mb-0">{{ active_exams_count|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm rounded">
+      <div class="card-body">
+        <h6 class="card-title">Students</h6>
+        <p class="display-6 mb-0">{{ students_count|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm rounded">
+      <div class="card-body">
+        <h6 class="card-title">Teachers</h6>
+        <p class="display-6 mb-0">{{ teachers_count|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

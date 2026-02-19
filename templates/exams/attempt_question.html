@@ -4,103 +4,146 @@
 
 {% block extra_css %}
 <style>
-    .attempt-layout { display: flex; gap: 1rem; margin-top: 1rem; }
-    .attempt-main { flex: 1; }
-    .attempt-sidebar { width: 220px; flex-shrink: 0; background: #eee; padding: 1rem; border-radius: 4px; }
-    .attempt-sidebar h3 { margin: 0 0 0.5rem; font-size: 1rem; }
-    .sidebar-section { margin-bottom: 1rem; }
-    .sidebar-section strong { display: block; margin-bottom: 0.25rem; font-size: 0.85rem; }
-    .q-palette { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-    .q-palette a, .q-palette span { display: inline-block; min-width: 2rem; padding: 0.25rem 0.4rem; text-align: center; border-radius: 4px; text-decoration: none; font-size: 0.9rem; }
-    .q-palette .attempted { background: #28a745; color: #fff; }
-    .q-palette .not-attempted { background: #fff; border: 1px solid #999; color: #333; }
-    .q-palette .review { background: #ffc107; color: #000; }
-    .q-palette .current { box-shadow: 0 0 0 2px #007bff; }
-    .timer { font-size: 1.25rem; font-weight: bold; padding: 0.5rem; }
-    .timer.warning { color: #856404; background: #fff3cd; }
-    .timer.danger { color: #721c24; background: #f8d7da; }
-    .question-block { margin: 1rem 0; padding: 1rem; background: #f9f9f9; border-radius: 4px; }
-    .options label { display: block; margin: 0.5rem 0; cursor: pointer; }
-    .submit-bar { margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    /* Fixed NTA-style timer bar */
+    .nta-timer-bar {
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+        background: #1a1a2e;
+        color: #fff;
+        padding: 0.6rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .nta-timer-bar .timer-display { font-size: 1.35rem; font-weight: 700; letter-spacing: 0.05em; }
+    .nta-timer-bar.timer-warning { background: #856404; }
+    .nta-timer-bar.timer-danger { background: #721c24; }
+    /* Question card & options */
+    .nta-question-card { border-left: 4px solid #0d6efd; }
+    .nta-option {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.6rem;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color .2s, background-color .2s;
+    }
+    .nta-option:hover { border-color: #86b7fe; background: #f8f9fa; }
+    .nta-option.selected { border-color: #0d6efd; background: #e7f1ff; }
+    .nta-option input { margin-right: 0.75rem; }
+    /* Sidebar: question palette - NTA colors */
+    .nta-palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; }
+    .nta-palette-btn {
+        display: flex; align-items: center; justify-content: center;
+        min-width: 2.25rem; height: 2.25rem;
+        padding: 0;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        border: 2px solid transparent;
+        transition: transform .15s, box-shadow .15s;
+    }
+    .nta-palette-btn:hover { transform: scale(1.05); text-decoration: none; }
+    .nta-palette-btn.attempted { background: #198754; color: #fff; }
+    .nta-palette-btn.not-attempted { background: #dc3545; color: #fff; }
+    .nta-palette-btn.marked { background: #6f42c1; color: #fff; }
+    .nta-palette-btn.current { box-shadow: 0 0 0 3px #0d6efd; border-color: #fff; }
+    @media (max-width: 991.98px) {
+        .nta-palette { grid-template-columns: repeat(6, 1fr); }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="timer" id="exam-timer">Time left: <span id="timer-display">--:--:--</span></div>
-
-<div class="attempt-layout">
-    <div class="attempt-main">
-        <h2>{{ exam.title }} — Question {{ order }} of {{ questions|length }}</h2>
-
-        <form method="post" id="question-form">
-            {% csrf_token %}
-            <input type="hidden" name="next_order" id="next_order" value="{{ order }}">
-
-            <div class="question-block">
-                <p><strong>Q{{ order }}.</strong> {{ question.question_text }}</p>
-                <div class="options">
-                    {% for key, text in question.options.items %}
-                    <label>
-                        <input type="radio" name="selected_option" value="{{ key }}" {% if selected_option == key %}checked{% endif %}> {{ key }}. {{ text }}
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <p>
-                <label>
-                    <input type="checkbox" name="marked_for_review" value="1" {% if marked_for_review %}checked{% endif %}> Mark for review
-                </label>
-            </p>
-
-            <div class="submit-bar">
-                {% if order > 1 %}
-                <button type="button" class="btn-prev">Previous</button>
-                {% endif %}
-                {% if order < questions|length %}
-                <button type="button" class="btn-next">Save & Next</button>
-                {% endif %}
-                <button type="button" class="btn-save">Save</button>
-                <a href="{{ submit_url }}" class="btn-submit-link">Submit exam</a>
-            </div>
-        </form>
+<!-- Fixed countdown timer -->
+<div id="exam-timer" class="nta-timer-bar">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-bold">{{ exam.title }}</span>
+            <span class="timer-display">Time left: <span id="timer-display">--:--:--</span></span>
+        </div>
     </div>
-
-    <aside class="attempt-sidebar">
-        <h3>Question palette</h3>
-        <div class="sidebar-section">
-            <strong>Attempted</strong>
-            <div class="q-palette">
-                {% for s in sidebar %}
-                {% if s.attempted %}
-                <a href="{% url 'exams:attempt_question' attempt.id s.order %}" class="attempted {% if s.order == order %}current{% endif %}">{{ s.order }}</a>
-                {% endif %}
-                {% endfor %}
-            </div>
-        </div>
-        <div class="sidebar-section">
-            <strong>Not attempted</strong>
-            <div class="q-palette">
-                {% for s in sidebar %}
-                {% if not s.attempted %}
-                <a href="{% url 'exams:attempt_question' attempt.id s.order %}" class="not-attempted {% if s.order == order %}current{% endif %}">{{ s.order }}</a>
-                {% endif %}
-                {% endfor %}
-            </div>
-        </div>
-        <div class="sidebar-section">
-            <strong>Marked for review</strong>
-            <div class="q-palette">
-                {% for ord in sidebar_review_orders %}
-                <a href="{% url 'exams:attempt_question' attempt.id ord %}" class="review {% if ord == order %}current{% endif %}">{{ ord }}</a>
-                {% empty %}
-                <span style="color:#666">None</span>
-                {% endfor %}
-            </div>
-        </div>
-    </aside>
 </div>
 
+<div class="container mt-4">
+    <div class="row g-4">
+        <!-- Question area -->
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm nta-question-card">
+                <div class="card-header bg-light py-3">
+                    <span class="text-muted">Question {{ order }} of {{ questions|length }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="question-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next_order" id="next_order" value="{{ order }}">
+
+                        <p class="fs-5 mb-4 fw-semibold">Q{{ order }}. {{ question.question_text }}</p>
+
+                        <div class="nta-options mb-4">
+                            {% for key, text in question.options.items %}
+                            <label for="opt_{{ key }}" class="nta-option {% if selected_option == key %}selected{% endif %}">
+                                <input type="radio" name="selected_option" value="{{ key }}" id="opt_{{ key }}" {% if selected_option == key %}checked{% endif %}>
+                                <strong>{{ key }}.</strong> {{ text }}
+                            </label>
+                            {% endfor %}
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" name="marked_for_review" value="1" id="mark_review" {% if marked_for_review %}checked{% endif %}>
+                            <label class="form-check-label" for="mark_review">Mark for review</label>
+                        </div>
+
+                        <hr>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% if order > 1 %}
+                            <button type="button" class="btn btn-outline-secondary btn-prev">← Previous</button>
+                            {% endif %}
+                            {% if order < questions|length %}
+                            <button type="button" class="btn btn-primary btn-next">Save & Next →</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-outline-primary btn-save">Save</button>
+                            <a href="{{ submit_url }}" class="btn btn-warning ms-auto">Submit Exam</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Question palette (NTA colors) -->
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm sticky-top" style="top: 4rem;">
+                <div class="card-header bg-light py-2">
+                    <strong>Question palette</strong>
+                </div>
+                <div class="card-body py-3">
+                    <div class="nta-palette mb-2" id="nta-palette" role="group" aria-label="Question numbers">
+                        {% for s in sidebar %}
+                        <a href="{% url 'exams:attempt_question' attempt.id s.order %}"
+                           class="nta-palette-btn {% if s.marked_for_review %}marked{% elif s.attempted %}attempted{% else %}not-attempted{% endif %} {% if s.order == order %}current{% endif %}"
+                           data-order="{{ s.order }}"
+                           data-attempted="{{ s.attempted|yesno:'true,false' }}"
+                           data-marked="{{ s.marked_for_review|yesno:'true,false' }}"
+                           title="Question {{ s.order }}">{{ s.order }}</a>
+                        {% endfor %}
+                    </div>
+                    <div class="small text-muted mt-2 d-flex flex-wrap gap-3">
+                        <span><span class="d-inline-block rounded me-1" style="width:12px;height:12px;background:#198754;"></span> Attempted</span>
+                        <span><span class="d-inline-block rounded me-1" style="width:12px;height:12px;background:#dc3545;"></span> Not attempted</span>
+                        <span><span class="d-inline-block rounded me-1" style="width:12px;height:12px;background:#6f42c1;"></span> Marked for review</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
 (function() {
     var durationSeconds = {{ duration_seconds }};
@@ -108,6 +151,8 @@
     var form = document.getElementById("question-form");
     var nextOrderInput = document.getElementById("next_order");
     var timerDisplay = document.getElementById("timer-display");
+    var timerEl = document.getElementById("exam-timer");
+    var currentOrder = {{ order }};
 
     function formatTime(sec) {
         var h = Math.floor(sec / 3600);
@@ -119,15 +164,14 @@
     function updateTimer() {
         if (durationSeconds <= 0) {
             timerDisplay.textContent = "0:00:00";
-            document.querySelector(".timer").className = "timer danger";
+            timerEl.classList.add("timer-danger");
             autoSubmit();
             return;
         }
         timerDisplay.textContent = formatTime(durationSeconds);
-        var el = document.querySelector(".timer");
-        el.classList.remove("warning", "danger");
-        if (durationSeconds <= 300) el.classList.add("danger");
-        else if (durationSeconds <= 600) el.classList.add("warning");
+        timerEl.classList.remove("timer-warning", "timer-danger");
+        if (durationSeconds <= 300) timerEl.classList.add("timer-danger");
+        else if (durationSeconds <= 600) timerEl.classList.add("timer-warning");
         durationSeconds--;
     }
 
@@ -148,8 +192,39 @@
         f.submit();
     }
 
+    // Sidebar state: highlight current, optional hover feedback
+    function initSidebar() {
+        var palette = document.getElementById("nta-palette");
+        if (!palette) return;
+        var buttons = palette.querySelectorAll(".nta-palette-btn");
+        buttons.forEach(function(btn) {
+            btn.addEventListener("click", function(e) {
+                nextOrderInput.value = btn.getAttribute("data-order");
+                form.submit();
+                e.preventDefault();
+            });
+        });
+    }
+
+    // Option selection: keep .selected in sync with checked radio
+    function initOptions() {
+        var labels = document.querySelectorAll(".nta-option");
+        var radios = document.querySelectorAll("input[name=selected_option]");
+        function syncSelected() {
+            var checked = document.querySelector("input[name=selected_option]:checked");
+            labels.forEach(function(l) {
+                l.classList.toggle("selected", l.querySelector("input") === checked);
+            });
+        }
+        radios.forEach(function(radio) {
+            radio.addEventListener("change", syncSelected);
+        });
+    }
+
     var timerInterval = setInterval(updateTimer, 1000);
     updateTimer();
+    initSidebar();
+    initOptions();
 
     document.querySelector(".btn-next") && document.querySelector(".btn-next").addEventListener("click", function() {
         nextOrderInput.value = "next";
@@ -160,7 +235,7 @@
         form.submit();
     });
     document.querySelector(".btn-save") && document.querySelector(".btn-save").addEventListener("click", function() {
-        nextOrderInput.value = "{{ order }}";
+        nextOrderInput.value = String(currentOrder);
         form.submit();
     });
 })();

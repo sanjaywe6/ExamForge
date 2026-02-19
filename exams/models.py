@@ -26,11 +26,14 @@ class Exam(models.Model):
         default=generate_test_code,
         editable=False,
     )
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+    # Time fields are optional — exams are not time-windowed anymore
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
     duration_minutes = models.PositiveIntegerField(
+        null=True,
+        blank=True,
         validators=[MinValueValidator(1)],
-        help_text="Duration in minutes",
+        help_text="Duration in minutes (optional)",
     )
     positive_marking = models.DecimalField(
         max_digits=6,
@@ -45,25 +48,23 @@ class Exam(models.Model):
         help_text="Use 0 or negative value (e.g. -0.25)",
     )
     result_published = models.BooleanField(default=False)
+    # Teacher-visible published flag for making exam available to students
+    published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["-start_time"]
+        ordering = ["-created_at"]
         constraints = [
-            models.CheckConstraint(
-                check=models.Q(end_time__gt=models.F("start_time")),
-                name="exam_end_after_start",
-            ),
             models.CheckConstraint(
                 check=models.Q(negative_marking__lte=0),
                 name="exam_negative_marking_non_positive",
             ),
         ]
         indexes = [
-            models.Index(fields=["start_time", "end_time"]),
             models.Index(fields=["created_by"]),
             models.Index(fields=["result_published"]),
+            models.Index(fields=["published"]),
         ]
 
     def save(self, *args, **kwargs):
@@ -83,7 +84,7 @@ class Exam(models.Model):
 
 class Question(models.Model):
     exam = models.ForeignKey(
-        Exam,
+        "exams.Exam",
         on_delete=models.CASCADE,
         related_name="questions",
     )

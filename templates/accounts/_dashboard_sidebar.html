@@ -1,0 +1,23 @@
+<div class="dashboard-sidebar bg-light p-3" style="min-width:220px;">
+    <div class="mb-3 text-center">
+        <strong>{{ user.get_full_name|default:user.email }}</strong>
+        <div class="text-muted small">{% if user.role %}{{ user.role }}{% endif %}</div>
+    </div>
+    <div class="d-grid gap-2">
+        <a href="{% url 'accounts:dashboard' %}" class="btn btn-outline-primary btn-sm text-start">Overview</a>
+        {% if user.role == 'STUDENT' %}
+            <a href="{% url 'exams:student_exams' %}" class="btn btn-outline-secondary btn-sm text-start">Available Exams</a>
+            <a href="{% url 'results:my_results_list' %}" class="btn btn-outline-secondary btn-sm text-start">My Results</a>
+        {% endif %}
+        {% if user.role == 'TEACHER' %}
+            <a href="{% url 'exams:exam_list' %}" class="btn btn-outline-secondary btn-sm text-start">My Exams</a>
+            <a href="{% url 'exams:exam_create' %}" class="btn btn-outline-secondary btn-sm text-start">Create Exam</a>
+        {% endif %}
+        {% if user.role == 'COLLEGE_ADMIN' %}
+            <a href="{% url 'colleges:register_teacher' %}" class="btn btn-outline-secondary btn-sm text-start">Manage Teachers</a>
+            <a href="{% url 'colleges:manage_students' %}" class="btn btn-outline-secondary btn-sm text-start">Manage Students</a>
+        {% endif %}
+        <a href="{% url 'accounts:profile_edit' %}" class="btn btn-outline-secondary btn-sm text-start">Edit Profile</a>
+        <a href="#" class="btn btn-outline-danger btn-sm text-start" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+    </div>
+</div>

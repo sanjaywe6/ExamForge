@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+  {% include 'dashboard/navbar.html' %}
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-lg-2 px-0">
+        {% include 'dashboard/sidebar.html' %}
+      </div>
+      <main class="col-lg-10 ms-sm-auto px-4 py-4">
+        <div class="pt-4">
+          {% block dashboard_content %}{% endblock %}
+        </div>
+      </main>
+    </div>
+  </div>
+{% endblock %}

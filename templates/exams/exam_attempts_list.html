@@ -3,43 +3,60 @@
 {% block title %}Attempts — {{ exam.title }}{% endblock %}
 
 {% block content %}
-<h1>Attempts: {{ exam.title }}</h1>
-<p><strong>Test code:</strong> {{ exam.test_code }} | <strong>Results published:</strong> {% if exam.result_published %}Yes{% else %}No{% endif %}</p>
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'exams:exam_list' %}">My exams</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'exams:exam_detail' exam.id %}">{{ exam.title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Attempts</li>
+    </ol>
+</nav>
+
+<h1 class="mb-3">Attempts: {{ exam.title }}</h1>
+<p class="text-muted mb-3">
+    <strong>Test code:</strong> {{ exam.test_code }} &middot;
+    <strong>Results published:</strong> {% if exam.result_published %}Yes{% else %}No{% endif %}
+</p>
 
 {% if not exam.result_published %}
-<p>
-    <form method="post" action="{% url 'exams:exam_publish_results' exam.id %}" style="display:inline;">
+<div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+    <form method="post" action="{% url 'exams:exam_publish_results' exam.id %}" class="d-inline me-2">
         {% csrf_token %}
-        <button type="submit">Publish results</button>
+        <button type="submit" class="btn btn-warning btn-sm">Publish results</button>
     </form>
-    — Students can see scores only after you publish.
-</p>
+    Students can see scores only after you publish.
+</div>
 {% endif %}
 
-<p><a href="{% url 'exams:exam_detail' exam.id %}">Back to exam</a></p>
+<p class="mb-3"><a href="{% url 'exams:exam_detail' exam.id %}" class="btn btn-outline-secondary btn-sm">Back to exam</a></p>
 
 {% if attempts %}
-<table style="width:100%; border-collapse: collapse;">
-    <thead>
-        <tr style="background:#eee;">
-            <th style="padding:0.5rem; text-align:left;">Student</th>
-            <th style="padding:0.5rem;">Submitted at</th>
-            <th style="padding:0.5rem;">Score</th>
-            <th style="padding:0.5rem;">Max</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for a in attempts %}
-        <tr>
-            <td style="padding:0.5rem;">{{ a.student.user.get_full_name|default:a.student.user.email }} ({{ a.student.roll_number|default:"—" }})</td>
-            <td style="padding:0.5rem;">{% if a.submitted_at %}{{ a.submitted_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</td>
-            <td style="padding:0.5rem;">{% if a.total_score is not None %}{{ a.total_score }}{% else %}—{% endif %}</td>
-            <td style="padding:0.5rem;">{% if a.max_score is not None %}{{ a.max_score }}{% else %}—{% endif %}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Student</th>
+                        <th>Submitted at</th>
+                        <th>Score</th>
+                        <th>Max</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in attempts %}
+                    <tr>
+                        <td>{{ a.student.user.get_full_name|default:a.student.user.email }} <span class="text-muted">({{ a.student.roll_number|default:"—" }})</span></td>
+                        <td>{% if a.submitted_at %}{{ a.submitted_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</td>
+                        <td>{% if a.total_score is not None %}{{ a.total_score }}{% else %}—{% endif %}</td>
+                        <td>{% if a.max_score is not None %}{{ a.max_score }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% else %}
-<p>No attempts yet.</p>
+<div class="alert alert-info" role="alert">No attempts yet.</div>
 {% endif %}
 {% endblock %}

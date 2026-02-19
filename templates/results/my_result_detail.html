@@ -3,9 +3,21 @@
 {% block title %}Result — {{ exam.title }}{% endblock %}
 
 {% block content %}
-<h1>Result: {{ exam.title }}</h1>
-<p><strong>Test code:</strong> {{ exam.test_code }}</p>
-<p><strong>Submitted:</strong> {{ attempt.submitted_at|date:"M d, Y H:i" }}</p>
-<p><strong>Your score:</strong> {{ attempt.total_score }} / {{ attempt.max_score }}</p>
-<p><a href="{% url 'results:my_results_list' %}">Back to my results</a></p>
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'results:my_results_list' %}">My results</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ exam.title }}</li>
+    </ol>
+</nav>
+
+<h1 class="mb-4">Result: {{ exam.title }}</h1>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <p class="mb-2"><strong>Test code:</strong> {{ exam.test_code }}</p>
+        <p class="mb-2"><strong>Submitted:</strong> {{ attempt.submitted_at|date:"M d, Y H:i" }}</p>
+        <p class="mb-0 fs-4"><strong>Your score:</strong> <span class="text-primary">{{ attempt.total_score }}</span> / {{ attempt.max_score }}</p>
+    </div>
+</div>
+<a href="{% url 'results:my_results_list' %}" class="btn btn-outline-secondary">Back to my results</a>
 {% endblock %}

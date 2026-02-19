@@ -3,25 +3,43 @@
 {% block title %}Upload questions — {{ exam.title }}{% endblock %}
 
 {% block content %}
-<h1>Upload questions: {{ exam.title }}</h1>
-<p>Upload a CSV file with the required columns. Existing questions are kept; new rows will be added.</p>
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'exams:exam_list' %}">My exams</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'exams:exam_detail' exam.id %}">{{ exam.title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Upload questions</li>
+    </ol>
+</nav>
 
-<form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    <p>
-        <label for="id_csv_file">CSV file</label><br>
-        {{ form.csv_file }}
-        {{ form.csv_file.help_text }}
-        {{ form.csv_file.errors }}
-    </p>
-    <p>
-        <button type="submit">Upload and add questions</button>
-        <a href="{% url 'exams:exam_detail' exam.id %}">Back to exam</a>
-    </p>
-</form>
+<h1 class="mb-4">Upload questions: {{ exam.title }}</h1>
+<p class="text-muted mb-4">Upload a CSV file with the required columns. Existing questions are kept; new rows will be added.</p>
 
-<p><strong>Required columns:</strong> order, question_text, option_a, option_b, option_c, option_d, correct_answer, marks</p>
-<pre>order,question_text,option_a,option_b,option_c,option_d,correct_answer,marks
-1,What is 2+2?,3,4,5,6,B,1</pre>
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="id_csv_file" class="form-label">CSV file</label>
+                <input type="file" name="csv_file" id="id_csv_file" class="form-control {% if form.csv_file.errors %}is-invalid{% endif %}" accept=".csv" required>
+                <div class="form-text">Required columns: order, question_text, option_a, option_b, option_c, option_d, correct_answer, marks</div>
+                {% if form.csv_file.errors %}
+                    <div class="invalid-feedback d-block">{{ form.csv_file.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">Upload and add questions</button>
+            <a href="{% url 'exams:exam_detail' exam.id %}" class="btn btn-outline-secondary">Back to exam</a>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light">Example</div>
+    <div class="card-body">
+        <pre class="mb-0 small bg-light p-3 rounded"><code>order,question_text,option_a,option_b,option_c,option_d,correct_answer,marks
+1,What is 2+2?,3,4,5,6,B,1</code></pre>
+    </div>
+</div>
 {% endblock %}
